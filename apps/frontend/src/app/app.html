@@ -1,61 +1,113 @@
 <div class="container">
   <header class="header">
-    <h1>{{ title }}</h1>
-    <p>Teste de integração com RabbitMQ</p>
+    <h1>{{ title() }}</h1>
+    <p>Sistema de envio de notificações com processamento assíncrono via RabbitMQ</p>
   </header>
 
   <main class="main-content">
-    <div class="message-section">
-      <h2>Enviar Mensagem</h2>
+    <div class="notification-section">
+      <h2>Enviar Notificação</h2>
       <div class="input-group">
         <input 
           type="text" 
-          [(ngModel)]="message" 
-          placeholder="Digite sua mensagem..."
-          class="message-input"
-          [disabled]="loading"
-          (keyup.enter)="sendMessage()"
+          [value]="message()"
+          (input)="onMessageInput($event.target.value)"
+          (keydown)="onKeydown($event)"
+          placeholder="Digite o conteúdo da notificação..."
+          class="notification-input"
+          [disabled]="loading()"
+          aria-label="Conteúdo da notificação"
+          autocomplete="off"
         >
         <button 
-          (click)="sendMessage()" 
-          [disabled]="loading || !message.trim()"
+          (click)="onSendNotification()" 
+          [disabled]="loading() || !message().trim()"
           class="send-button"
+          [attr.aria-label]="loading() ? 'Enviando notificação' : 'Enviar notificação'"
         >
-          {{ loading ? 'Enviando...' : 'Enviar' }}
+          @if (loading()) {
+            <span class="loading-spinner" aria-hidden="true"></span>
+            Enviando...
+          } @else {
+            Enviar Notificação
+          }
         </button>
       </div>
     </div>
 
-    <div class="queue-info-section">
-      <h2>Informações da Fila</h2>
-      <div class="info-card" *ngIf="queueInfo">
-        <div class="info-item">
-          <span class="label">Nome da Fila:</span>
-          <span class="value">{{ queueInfo.queueName || 'N/A' }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Mensagens na Fila:</span>
-          <span class="value">{{ queueInfo.messageCount || 0 }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Consumidores:</span>
-          <span class="value">{{ queueInfo.consumerCount || 0 }}</span>
-        </div>
-        <div class="info-item" *ngIf="queueInfo.error">
-          <span class="label error">Erro:</span>
-          <span class="value error">{{ queueInfo.error }}</span>
-        </div>
+    <div class="notifications-list-section">
+      <div class="section-header">
+        <h2>Lista de Notificações</h2>
+        @if (hasNotifications()) {
+          <span class="notification-count" [attr.aria-label]="'Total de ' + notifications().length + ' notificações'">
+            {{ notifications().length }} notificação{{ notifications().length !== 1 ? 's' : '' }}
+          </span>
+        }
       </div>
+      
+      @if (hasNotifications()) {
+        <div class="notifications-container" role="list" aria-label="Lista de notificações">
+          @for (notification of notifications(); track trackByMessageId($index, notification)) {
+            <article 
+              class="notification-card" 
+              role="listitem"
+              [attr.aria-label]="'Notificação ' + notification.mensagemId + ' com status ' + getStatusText(notification.status)"
+            >
+              <div class="notification-header">
+                <span class="notification-id" title="ID da notificação">
+                  ID: {{ notification.mensagemId }}
+                </span>
+                <span 
+                  class="status-badge" 
+                  [class.processing]="notification.isProcessing"
+                  [style.background-color]="getStatusColor(notification.status)"
+                  [attr.aria-label]="'Status: ' + getStatusText(notification.status)"
+                >
+                  @if (notification.isProcessing) {
+                    <span class="status-spinner" aria-hidden="true"></span>
+                  }
+                  {{ getStatusText(notification.status) }}
+                </span>
+              </div>
+              <div class="notification-content">
+                <p class="notification-message" [title]="notification.conteudoMensagem">
+                  {{ notification.conteudoMensagem }}
+                </p>
+              </div>
+              <div class="notification-footer">
+                <time 
+                  class="timestamp"
+                  [dateTime]="notification.timestamp.toISOString()"
+                  [title]="notification.timestamp.toLocaleString()"
+                >
+                  Enviado em: {{ notification.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
+                </time>
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="no-notifications" role="status" aria-live="polite">
+          <p>Nenhuma notificação enviada ainda.</p>
+          <p>Digite uma mensagem acima para começar!</p>
+        </div>
+      }
     </div>
 
     <div class="instructions-section">
-      <h2>Como Testar</h2>
+      <h2>Como Funciona</h2>
       <ol>
-        <li>Digite uma mensagem no campo acima</li>
-        <li>Clique em "Enviar" para publicar na fila</li>
-        <li>Verifique as informações da fila abaixo</li>
-        <li>Acesse o RabbitMQ Management UI em: <a href="http://localhost:15672" target="_blank">http://localhost:15672</a></li>
-        <li>Login: admin / Senha: admin123</li>
+        <li>Digite uma notificação no campo acima</li>
+        <li>Pressione <kbd>Enter</kbd> ou clique em "Enviar Notificação" - um UUID será gerado automaticamente</li>
+        <li>A notificação será enviada para processamento assíncrono via RabbitMQ</li>
+        <li>O status será atualizado automaticamente a cada 3 segundos</li>
+        <li>20% das notificações falharão intencionalmente para demonstração</li>
+        <li>Acesse o RabbitMQ Management UI em: 
+          <a href="http://localhost:15672" target="_blank" rel="noopener noreferrer">
+            http://localhost:15672
+          </a>
+        </li>
+        <li>Login: <strong>admin</strong> / Senha: <strong>admin123</strong></li>
       </ol>
     </div>
   </main>
