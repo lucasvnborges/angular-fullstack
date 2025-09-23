@@ -32,6 +32,8 @@ describe('AppController', () => {
           useValue: {
             setStatus: jest.fn(),
             getStatus: jest.fn(),
+            createNotification: jest.fn(),
+            updateStatus: jest.fn(),
           },
         },
       ],
@@ -57,7 +59,7 @@ describe('AppController', () => {
         .spyOn(messagingService, 'publishNotification')
         .mockResolvedValue(true);
       jest
-        .spyOn(notificationService, 'setStatus')
+        .spyOn(notificationService, 'createNotification')
         .mockImplementation(() => undefined);
 
       const result = await controller.sendNotification(notificationData);
@@ -70,8 +72,9 @@ describe('AppController', () => {
       expect(messagingService.publishNotification).toHaveBeenCalledWith(
         notificationData
       );
-      expect(notificationService.setStatus).toHaveBeenCalledWith(
+      expect(notificationService.createNotification).toHaveBeenCalledWith(
         'test-id-123',
+        'Test notification content',
         'AGUARDANDO_PROCESSAMENTO'
       );
     });
