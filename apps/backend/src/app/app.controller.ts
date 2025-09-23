@@ -14,6 +14,7 @@ import {
   NotificationRequest,
   NotificationResponse,
   StatusResponse,
+  NotificationListResponse,
 } from './interfaces/notification.interface';
 
 @Controller()
@@ -56,9 +57,9 @@ export class AppController {
       });
 
       if (success) {
-        // Definir status inicial
-        this.notificationService.setStatus(
+        this.notificationService.createNotification(
           body.mensagemId,
+          body.conteudoMensagem,
           'AGUARDANDO_PROCESSAMENTO'
         );
 
@@ -92,6 +93,15 @@ export class AppController {
     return {
       mensagemId: mensagemId,
       status: status || 'NOT_FOUND',
+    };
+  }
+
+  @Get('notificacoes')
+  async getAllNotifications(): Promise<NotificationListResponse> {
+    const notifications = this.notificationService.getAllNotifications();
+    return {
+      notifications,
+      total: notifications.length,
     };
   }
 }
