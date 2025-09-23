@@ -1,10 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  NotificationMessage,
+  StatusUpdate,
+} from '../interfaces/notification.interface';
 
 @Injectable()
 export class MessagingService implements OnModuleInit, OnModuleDestroy {
   private connection: any = null;
   private channel: any = null;
-  private readonly queueName = 'message_queue';
+  private readonly notificationQueueName = 'fila.notificacao.entrada.terra';
+  private readonly statusQueueName = 'fila.notificacao.status.terra';
 
   async onModuleInit() {
     await this.initializeConnection();
@@ -14,17 +20,21 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
     try {
       // Dynamic import to avoid TypeScript issues
       const amqp = await import('amqplib');
-      
+
       // Connect to RabbitMQ
-      const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://admin:admin123@localhost:5672';
+      const rabbitmqUrl =
+        process.env.RABBITMQ_URL || 'amqp://admin:admin123@localhost:5672';
       console.log('Connecting to RabbitMQ:', rabbitmqUrl);
-      
+
       this.connection = await amqp.connect(rabbitmqUrl);
       this.channel = await this.connection.createChannel();
 
-      // Create queue
-      await this.channel.assertQueue(this.queueName, { durable: true });
-      
+      // Create notification queues
+      await this.channel.assertQueue(this.notificationQueueName, {
+        durable: true,
+      });
+      await this.channel.assertQueue(this.statusQueueName, { durable: true });
+
       console.log('Connected to RabbitMQ successfully');
     } catch (error) {
       console.error('Failed to connect to RabbitMQ:', error);
@@ -46,73 +56,86 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async publishMessage(message: string): Promise<boolean> {
+  async publishNotification(
+    notification: Omit<NotificationMessage, 'timestamp'>
+  ): Promise<boolean> {
     try {
       if (!this.channel) {
         console.log('Channel not initialized, attempting to reconnect...');
         await this.initializeConnection();
-        
+
         if (!this.channel) {
           throw new Error('Channel not initialized after retry');
         }
       }
 
-      const messageBuffer = Buffer.from(JSON.stringify({
-        message,
+      const message: NotificationMessage = {
+        mensagemId: notification.mensagemId,
+        conteudoMensagem: notification.conteudoMensagem,
         timestamp: new Date().toISOString(),
-        id: Math.random().toString(36).substr(2, 9)
-      }));
+      };
 
-      const sent = this.channel.sendToQueue(this.queueName, messageBuffer, {
-        persistent: true
-      });
+      const messageBuffer = Buffer.from(JSON.stringify(message));
 
-      console.log(`Message published: ${message}`);
+      const sent = this.channel.sendToQueue(
+        this.notificationQueueName,
+        messageBuffer,
+        {
+          persistent: true,
+        }
+      );
+
+      console.log(`Notification published: ${notification.mensagemId}`);
       return sent;
     } catch (error) {
-      console.error('Error publishing message:', error);
+      console.error('Error publishing notification:', error);
       return false;
     }
   }
 
-  async consumeMessages(callback: (message: any) => void): Promise<void> {
+  async publishStatusUpdate(
+    mensagemId: string,
+    status: StatusUpdate['status']
+  ): Promise<boolean> {
     try {
       if (!this.channel) {
-        throw new Error('Channel not initialized');
+        console.log('Channel not initialized, attempting to reconnect...');
+        await this.initializeConnection();
+
+        if (!this.channel) {
+          throw new Error('Channel not initialized after retry');
+        }
       }
 
-      await this.channel.consume(this.queueName, (msg) => {
-        if (msg) {
-          const content = JSON.parse(msg.content.toString());
-          callback(content);
-          this.channel.ack(msg);
+      const statusUpdate: StatusUpdate = {
+        mensagemId,
+        status,
+        timestamp: new Date().toISOString(),
+      };
+
+      const messageBuffer = Buffer.from(JSON.stringify(statusUpdate));
+
+      const sent = this.channel.sendToQueue(
+        this.statusQueueName,
+        messageBuffer,
+        {
+          persistent: true,
         }
-      });
+      );
+
+      console.log(`Status update published: ${mensagemId} - ${status}`);
+      return sent;
     } catch (error) {
-      console.error('Error consuming messages:', error);
+      console.error('Error publishing status update:', error);
+      return false;
     }
   }
 
-  async getQueueInfo(): Promise<any> {
-    try {
-      if (!this.channel) {
-        return { error: 'Channel not initialized' };
-      }
+  getChannel(): any {
+    return this.channel;
+  }
 
-      const queueInfo = await this.channel.checkQueue(this.queueName);
-      return {
-        queueName: this.queueName,
-        messageCount: queueInfo.messageCount || 0,
-        consumerCount: queueInfo.consumerCount || 0
-      };
-    } catch (error) {
-      console.error('Error getting queue info:', error);
-      return { 
-        queueName: this.queueName,
-        messageCount: 0,
-        consumerCount: 0,
-        error: error.message || 'Unknown error'
-      };
-    }
+  getNotificationQueueName(): string {
+    return this.notificationQueueName;
   }
 }
