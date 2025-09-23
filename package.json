@@ -20,6 +20,7 @@
     "axios": "^1.6.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "~7.8.0",
+    "uuid": "^9.0.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
@@ -51,6 +52,7 @@
     "@types/amqplib": "^0.10.1",
     "@types/jest": "^29.5.12",
     "@types/node": "20.19.9",
+    "@types/uuid": "^9.0.0",
     "@typescript-eslint/utils": "^8.40.0",
     "angular-eslint": "^20.2.0",
     "cypress": "^14.2.1",
