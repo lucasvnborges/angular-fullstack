@@ -96,7 +96,7 @@ export class NotificationConsumer implements OnModuleInit {
     );
 
     // Atualizar status no serviço
-    this.notificationService.setStatus(mensagemId, status);
+    this.notificationService.updateStatus(mensagemId, status);
 
     // Publicar status na fila de status
     await this.messagingService.publishStatusUpdate(mensagemId, status);

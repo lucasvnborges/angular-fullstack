@@ -30,3 +30,15 @@ export interface NotificationRequest {
   mensagemId: string;
   conteudoMensagem: string;
 }
+
+export interface CachedNotification {
+  mensagemId: string;
+  conteudoMensagem: string;
+  status: NotificationStatus;
+  timestamp: Date;
+}
+
+export interface NotificationListResponse {
+  notifications: CachedNotification[];
+  total: number;
+}
