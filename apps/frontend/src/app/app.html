@@ -1,2 +1,62 @@
-<app-nx-welcome></app-nx-welcome>
-<router-outlet></router-outlet>
+<div class="container">
+  <header class="header">
+    <h1>{{ title }}</h1>
+    <p>Teste de integração com RabbitMQ</p>
+  </header>
+
+  <main class="main-content">
+    <div class="message-section">
+      <h2>Enviar Mensagem</h2>
+      <div class="input-group">
+        <input 
+          type="text" 
+          [(ngModel)]="message" 
+          placeholder="Digite sua mensagem..."
+          class="message-input"
+          [disabled]="loading"
+          (keyup.enter)="sendMessage()"
+        >
+        <button 
+          (click)="sendMessage()" 
+          [disabled]="loading || !message.trim()"
+          class="send-button"
+        >
+          {{ loading ? 'Enviando...' : 'Enviar' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="queue-info-section">
+      <h2>Informações da Fila</h2>
+      <div class="info-card" *ngIf="queueInfo">
+        <div class="info-item">
+          <span class="label">Nome da Fila:</span>
+          <span class="value">{{ queueInfo.queueName || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Mensagens na Fila:</span>
+          <span class="value">{{ queueInfo.messageCount || 0 }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Consumidores:</span>
+          <span class="value">{{ queueInfo.consumerCount || 0 }}</span>
+        </div>
+        <div class="info-item" *ngIf="queueInfo.error">
+          <span class="label error">Erro:</span>
+          <span class="value error">{{ queueInfo.error }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="instructions-section">
+      <h2>Como Testar</h2>
+      <ol>
+        <li>Digite uma mensagem no campo acima</li>
+        <li>Clique em "Enviar" para publicar na fila</li>
+        <li>Verifique as informações da fila abaixo</li>
+        <li>Acesse o RabbitMQ Management UI em: <a href="http://localhost:15672" target="_blank">http://localhost:15672</a></li>
+        <li>Login: admin / Senha: admin123</li>
+      </ol>
+    </div>
+  </main>
+</div>
