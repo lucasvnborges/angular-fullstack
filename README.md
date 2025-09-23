@@ -9,7 +9,13 @@
 ### 1. Executar a aplicação
 ```bash
 git clone https://github.com/lucasvnborges/angular-fullstack.git
+```
+
+```bash
 cd angular-fullstack
+```
+
+```bash
 docker-compose up --build
 ```
 
