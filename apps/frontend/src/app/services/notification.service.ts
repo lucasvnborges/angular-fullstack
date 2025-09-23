@@ -35,11 +35,24 @@ export interface NotificationItem {
   readonly isProcessing: boolean;
 }
 
+export interface CachedNotification {
+  mensagemId: string;
+  conteudoMensagem: string;
+  status: NotificationStatus;
+  timestamp: string;
+}
+
+export interface NotificationListResponse {
+  notifications: CachedNotification[];
+  total: number;
+}
+
 // Configuration
 const API_CONFIG = {
   ENDPOINTS: {
     SEND_NOTIFICATION: '/api/notificar',
     GET_STATUS: (id: string) => `/api/notificacao/status/${id}`,
+    GET_ALL_NOTIFICATIONS: '/api/notificacoes',
   },
   TIMEOUTS: {
     REQUEST: 10000, // 10 seconds
@@ -136,6 +149,40 @@ export class NotificationService {
         }),
         tap({
           finalize: () => this._loading.set(false),
+        })
+      );
+  }
+
+  /**
+   * Loads all notifications from backend cache
+   * @returns Observable with all cached notifications
+   */
+  loadAllNotifications(): Observable<NotificationListResponse> {
+    return this.http
+      .get<NotificationListResponse>(API_CONFIG.ENDPOINTS.GET_ALL_NOTIFICATIONS)
+      .pipe(
+        timeout(API_CONFIG.TIMEOUTS.REQUEST),
+        retry({
+          count: API_CONFIG.RETRY_COUNT,
+          delay: API_CONFIG.TIMEOUTS.RETRY_DELAY,
+        }),
+        tap((response) => {
+          console.log('Loaded notifications from cache:', response);
+          // Convert cached notifications to NotificationItems
+          const notificationItems: NotificationItem[] = response.notifications.map(cached => ({
+            mensagemId: cached.mensagemId,
+            conteudoMensagem: cached.conteudoMensagem,
+            status: cached.status,
+            timestamp: new Date(cached.timestamp),
+            isProcessing: cached.status === 'AGUARDANDO_PROCESSAMENTO'
+          }));
+          this._notifications.set(notificationItems);
+        }),
+        catchError((error) => {
+          const errorMessage = this.getErrorMessage(error);
+          console.error('Failed to load notifications:', errorMessage);
+          this._error.set(errorMessage);
+          return throwError(() => error);
         })
       );
   }
