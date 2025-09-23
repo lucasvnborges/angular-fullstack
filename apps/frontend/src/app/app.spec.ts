@@ -2,10 +2,12 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { App } from './app';
+import { NotificationService } from './services/notification.service';
 
 describe('App', () => {
   let component: App;
   let fixture: ComponentFixture<App>;
+  let notificationService: NotificationService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -18,6 +20,7 @@ describe('App', () => {
 
     fixture = TestBed.createComponent(App);
     component = fixture.componentInstance;
+    notificationService = TestBed.inject(NotificationService);
   });
 
   it('should create', () => {
@@ -63,7 +66,8 @@ describe('App', () => {
   });
 
   it('should disable button when loading', () => {
-    component.loading.set(true);
+    // Usar o serviço privado para simular loading
+    (notificationService as any)._loading.set(true);
     fixture.detectChanges();
     
     const button = fixture.nativeElement.querySelector('button');
@@ -96,7 +100,8 @@ describe('App', () => {
       isProcessing: true
     };
 
-    component.notifications.set([mockNotification]);
+    // Usar o serviço privado para adicionar notificações
+    (notificationService as any)._notifications.set([mockNotification]);
     fixture.detectChanges();
     
     const notificationCount = fixture.nativeElement.querySelector('.notification-count');
@@ -171,7 +176,8 @@ describe('App', () => {
       }
     ];
 
-    component.notifications.set(mockNotifications);
+    // Usar o serviço privado para adicionar notificações
+    (notificationService as any)._notifications.set(mockNotifications);
     
     expect(component.hasNotifications()).toBeTruthy();
     expect(component.pendingNotifications()).toHaveLength(1);
