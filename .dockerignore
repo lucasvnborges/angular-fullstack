@@ -15,3 +15,9 @@ coverage
 Thumbs.db
 apps/*/node_modules
 apps/*/dist
+.angular
+.nx
+tmp
+.cache
+*.tgz
+*.tar.gz

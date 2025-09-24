@@ -31,11 +31,11 @@ COPY --from=dev-deps /app/package*.json ./
 COPY --from=dev-deps /app/nx.json ./
 COPY --from=dev-deps /app/tsconfig.base.json ./
 
-# Copy source code
-COPY apps/frontend ./apps/frontend
+# Copy all necessary files for build
+COPY . .
 
 # Build with cache
-RUN npx nx build frontend --prod
+RUN npx nx build frontend --configuration=production
 
 # Production stage with nginx
 FROM nginx:alpine AS production
