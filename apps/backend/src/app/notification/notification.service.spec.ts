@@ -74,7 +74,7 @@ describe('NotificationService', () => {
 
       service.createNotification('id1', 'Message 1', status1);
       // Delay maior para garantir timestamps diferentes
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 50));
       service.createNotification('id2', 'Message 2', status2);
 
       const allNotifications = service.getAllNotifications();
