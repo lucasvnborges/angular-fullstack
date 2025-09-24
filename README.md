@@ -51,11 +51,17 @@ docker-compose up --build -d
 ## 🧪 Executar Testes
 
 ```bash
-# Backend
-nx test backend --watch=false
+npm install
+```
 
+```bash
+# Backend
+nx test backend --watch=false --verbose --skip-nx-cache
+```
+
+```bash
 # Frontend  
-nx test frontend --watch=false
+nx test frontend --watch=false --verbose --skip-nx-cache
 ```
 
 ## 🛠️ Comandos Úteis
