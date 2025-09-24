@@ -21,12 +21,8 @@ export class NotificationConsumer implements OnModuleInit {
   }
 
   private async startConsumer() {
-    try {
-      console.log('Starting notification consumer...');
-      await this.consumeNotifications();
-    } catch (error) {
-      console.error('Error starting notification consumer:', error);
-    }
+    console.log('Starting notification consumer...');
+    await this.consumeNotifications();
   }
 
   private async consumeNotifications(): Promise<void> {
@@ -35,6 +31,10 @@ export class NotificationConsumer implements OnModuleInit {
       const channel = this.messagingService.getChannel();
       if (!channel) {
         console.error('Channel not available for consuming notifications');
+        // Tentar novamente após 5 segundos
+        setTimeout(() => {
+          this.consumeNotifications();
+        }, 5000);
         return;
       }
 
