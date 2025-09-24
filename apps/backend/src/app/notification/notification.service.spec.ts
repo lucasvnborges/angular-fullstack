@@ -69,12 +69,12 @@ describe('NotificationService', () => {
 
   describe('getAllNotifications', () => {
     it('should return all notifications', async () => {
-      const status1: NotificationStatus = 'PROCESSADO_SUCESSO';
-      const status2: NotificationStatus = 'FALHA_PROCESSAMENTO';
+      const status1: NotificationStatus = 'AGUARDANDO_PROCESSAMENTO';
+      const status2: NotificationStatus = 'PROCESSADO_SUCESSO';
 
       service.createNotification('id1', 'Message 1', status1);
-      // Pequeno delay para garantir timestamps diferentes
-      await new Promise(resolve => setTimeout(resolve, 1));
+      // Delay maior para garantir timestamps diferentes
+      await new Promise(resolve => setTimeout(resolve, 10));
       service.createNotification('id2', 'Message 2', status2);
 
       const allNotifications = service.getAllNotifications();
