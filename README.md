@@ -16,7 +16,7 @@ cd angular-fullstack
 ```
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
 
 ### 2. Acessar os serviços
